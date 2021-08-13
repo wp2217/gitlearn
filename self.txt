@@ -1,0 +1,161 @@
+WS20000075 PO release
+WS65400030 PO reject
+
+/UI5/UI5_REPOSITORY_LOAD  Single SAPUI5 App
+/UI5/UI5_REPOSITORY_LOAD_HTTP  upload an SAPUI5 app from a zip or war archive 网上导入
+If you use the /UI5/UI5_REPOSITORY_LOAD_HTTP and /UI5/UI5_REPOSITORY_LOAD_HTTPN reports to upload your project to the SAPUI5 ABAP repository instead, make sure that you upload only the content of the webapp or dist folder without the folder itself. This ensures that the manifest.json is in the root of the structure in the SAPUI5 ABAP repository and the app index can be loaded.
+
+
+/UI5/APP_INDEX_CALCULATE  计算索引显示日志等
+
+强制不用缓存参数
+https://vhcalhdbdb.topsap.net:44300/sap/bc/ui5_ui5/sap/ybc_sws_login/index.html?sap-ui-xx-devmode=true
+
+
+
+https://43220c0etrial.cpp.cfapps.ap21.hana.ondemand.com/11cfd2d6-9d53-498f-bab0-6b714de66ff8.project3.project3-1.0.0/
+
+https://43220c0etrial.launchpad.cfapps.ap21.hana.ondemand.com/11cfd2d6-9d53-498f-bab0-6b714de66ff8.project3.project3-1.0.0/
+
+
+WP@zy2021
+运维平台 pwsd 77777777
+
+
+ "editor.semanticTokenColorCustomizations": {
+        "[Default Dark+]": {
+            "rules": {
+                "property.mandatory:xml": {
+                    "bold": true
+                },
+                "string.i18n:xml": {
+                    "italic": true
+                }
+            }
+        },
+        "[Default Light+]": {
+            "rules": {
+                "property.mandatory:xml": {
+                    "bold": true
+                },
+                "string.i18n:xml": {
+                    "italic": true
+                }
+            }
+        },
+        "[Default High Contrast]": {
+            "rules": {
+                "property.mandatory:xml": {
+                    "bold": true
+                },
+                "string.i18n:xml": {
+                    "italic": true
+                }
+            }
+        }
+    }
+
+
+http://suzhou.bendibao.com/live/2018913/66717.shtm
+
+http://suzhou.bendibao.com/live/201418/40888.shtm
+
+DATA: idoc_data           TYPE TABLE OF edidd.
+DATA: t_comm_control  TYPE TABLE OF edidc,
+      wa_comm_control TYPE edidc,
+      idoc_control    TYPE edidc.
+DATA: c_invrev_idoc_type(29) TYPE c VALUE 'SHP_OBDLV_CONFIRM_DECENTRAL03'. " IDOC TIPO BASE
+DATA: c_invrev_mestype(27)   TYPE c VALUE 'SHP_OBDLV_CONFIRM_DECENTRAL'.   " TIPO DE MENSAJE
+DATA: ls_e1shp_obdlv_confirm_decentr TYPE e1shp_obdlv_confirm_decentr,
+      ls_e1bpobdlvhdrcon             TYPE e1bpobdlvhdrcon,
+      ls_e1bpobdlvhdrctrlcon         TYPE e1bpobdlvhdrctrlcon.
+DATA: ls_idoc_data TYPE edidd.
+DATA: lv_numidoc TYPE edi_docnum.
+DATA dummy TYPE string.
+DATA ls_idoctrl  TYPE ZTB_ACUER_INTER.
+DATA idoc_data2  TYPE TABLE OF  edi_dd40.
+DATA: ls_idoc_data2 TYPE edi_dd40.
+DATA: lv_idocnum TYPE edidc-docnum.
+data it_idoc_control TYPE TABLE OF edidc.
+
+
+TRY.
+    IF ( activity_code = '20' AND ref_value = '99' ) .
+      " Asignando valores a campos de los segmentos
+      ls_e1shp_obdlv_confirm_decentr-delivery  = order_nbr.
+      ls_e1bpobdlvhdrcon-deliv_numb            = order_nbr.
+      ls_e1bpobdlvhdrctrlcon-deliv_numb        = order_nbr.
+      ls_e1bpobdlvhdrctrlcon-dlv_del           = 'X'.
+
+
+      " Agregando lineas a tabla con segmentos
+      ls_idoc_data-segnam = 'E1SHP_OBDLV_CONFIRM_DECENTR'.
+      ls_idoc_data-sdata  = ls_e1shp_obdlv_confirm_decentr.
+      APPEND ls_idoc_data TO idoc_data.
+
+
+      ls_idoc_data-segnam = 'E1BPOBDLVHDRCON'.
+      ls_idoc_data-sdata  = ls_e1bpobdlvhdrcon.
+      APPEND ls_idoc_data TO idoc_data.
+
+
+      ls_idoc_data-segnam = 'E1BPOBDLVHDRCTRLCON'.
+      ls_idoc_data-sdata  = ls_e1bpobdlvhdrctrlcon.
+      APPEND ls_idoc_data TO idoc_data.
+
+
+      SELECT SINGLE * from ZTB_ACUER_INTER into ls_idoctrl.
+
+
+      idoc_control-mestyp  = c_invrev_mestype.
+      idoc_control-IDOCTP  = c_invrev_idoc_type.
+      idoc_control-DIRECT  = '2'.               " Sentido del IDoc: Entrada
+      idoc_control-rcvprt  = ls_idoctrl-rcvprt.
+      idoc_control-rcvprn  = ls_idoctrl-rcvprn.
+      idoc_control-sndprt  = ls_idoctrl-sndprt.
+      idoc_control-sndprn  = ls_idoctrl-sndprn.
+      idoc_control-SNDPOR  = ls_idoctrl-SNDPOR. " Puerta remitente
+      idoc_control-RCVPOR  = ls_idoctrl-RCVPOR. " Puerta destinatario
+DATA:
+ld_pe_idoc_number	TYPE EDIDC-DOCNUM,
+ld_pe_state_of_processing	TYPE SY-SUBRC,
+ld_pe_inbound_process_data  TYPE TEDE2.
+
+
+      CALL FUNCTION 'IDOC_INBOUND_WRITE_TO_DB'
+       IMPORTING
+         PE_IDOC_NUMBER                = ld_pe_idoc_number
+         PE_STATE_OF_PROCESSING        = ld_pe_state_of_processing
+         PE_INBOUND_PROCESS_DATA       = ld_pe_inbound_process_data
+        TABLES
+          t_data_records                = idoc_data
+*         T_LINKED_OBJECTS              =
+        changing
+          pc_control_record             = idoc_CONTROL
+*       EXCEPTIONS
+*         IDOC_NOT_SAVED                = 1
+*         OTHERS                        = 2
+.
+      IF sy-subrc <> 0.
+        ls_log-msgid = sy-msgid.
+        ls_log-msgno = sy-msgno.
+        ls_log-msgty = sy-msgty.
+        ls_log-msgv1 = order_nbr.
+        ls_log-msgv2 = activity_code.
+        ls_log-msgv3 = ref_value.
+
+
+        APPEND ls_log TO lt_log.
+      ELSE.
+          
+        COMMIT WORK.
+        SUBMIT rseout00.
+      ENDIF.
+    ENDIF.
+CATCH CX_ROOT.
+    ls_log-msgty = 'E'.
+    CONCATENATE 'ORDER: ' order_nbr                       INTO ls_log-msgv1.
+    CONCATENATE 'ACTIVITY_CODE' activity_code             INTO ls_log-msgv2.
+    ls_log-msgv3 = ' Error en ejecucion GAP 154'.
+    APPEND ls_log TO lt_log.
+ENDTRY.
