@@ -1,14 +1,22 @@
 WS20000075 PO release
 WS65400030 PO reject
 
+https://max.book118.com/html/2017/0508/105274969.shtm  PO PR å®¡æ‰¹é…ç½®
+https://samz.dev/blogs/How-to-Handle-CSRF-Token-in-SAPUI5/  CSRF Token
+
+ç”¨æˆ·ç™»å½•
+SUSR_CHECK_LOGON_DATA
+SUSR_LOGIN_CHECK_RFC
+
+
 /UI5/UI5_REPOSITORY_LOAD  Single SAPUI5 App
-/UI5/UI5_REPOSITORY_LOAD_HTTP  upload an SAPUI5 app from a zip or war archive ÍøÉÏµ¼Èë
+/UI5/UI5_REPOSITORY_LOAD_HTTP  upload an SAPUI5 app from a zip or war archive ç½‘ä¸Šå¯¼å…¥
 If you use the /UI5/UI5_REPOSITORY_LOAD_HTTP and /UI5/UI5_REPOSITORY_LOAD_HTTPN reports to upload your project to the SAPUI5 ABAP repository instead, make sure that you upload only the content of the webapp or dist folder without the folder itself. This ensures that the manifest.json is in the root of the structure in the SAPUI5 ABAP repository and the app index can be loaded.
 
 
-/UI5/APP_INDEX_CALCULATE  ¼ÆËãË÷ÒıÏÔÊ¾ÈÕÖ¾µÈ
+/UI5/APP_INDEX_CALCULATE  è®¡ç®—ç´¢å¼•æ˜¾ç¤ºæ—¥å¿—ç­‰
 
-Ç¿ÖÆ²»ÓÃ»º´æ²ÎÊı
+å¼ºåˆ¶ä¸ç”¨ç¼“å­˜å‚æ•°
 https://vhcalhdbdb.topsap.net:44300/sap/bc/ui5_ui5/sap/ybc_sws_login/index.html?sap-ui-xx-devmode=true
 
 
@@ -19,7 +27,7 @@ https://43220c0etrial.launchpad.cfapps.ap21.hana.ondemand.com/11cfd2d6-9d53-498f
 
 
 WP@zy2021
-ÔËÎ¬Æ½Ì¨ pwsd 77777777
+è¿ç»´å¹³å° pwsd 77777777
 
 
  "editor.semanticTokenColorCustomizations": {
