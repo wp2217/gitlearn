@@ -8,10 +8,14 @@ https://samz.dev/blogs/How-to-Handle-CSRF-Token-in-SAPUI5/  CSRF Token
 SUSR_CHECK_LOGON_DATA
 SUSR_LOGIN_CHECK_RFC
 
+ZSD001_PR_APPR_FZ
+
 
 /UI5/UI5_REPOSITORY_LOAD  Single SAPUI5 App
 /UI5/UI5_REPOSITORY_LOAD_HTTP  upload an SAPUI5 app from a zip or war archive 网上导入
-If you use the /UI5/UI5_REPOSITORY_LOAD_HTTP and /UI5/UI5_REPOSITORY_LOAD_HTTPN reports to upload your project to the SAPUI5 ABAP repository instead, make sure that you upload only the content of the webapp or dist folder without the folder itself. This ensures that the manifest.json is in the root of the structure in the SAPUI5 ABAP repository and the app index can be loaded.
+If you use the /UI5/UI5_REPOSITORY_LOAD_HTTP and /UI5/UI5_REPOSITORY_LOAD_HTTPN reports to upload your project to the SAPUI5 ABAP repository instead, make sure that you upload only the content of the webapp or dist folder without the 
+
+folder itself. This ensures that the manifest.json is in the root of the structure in the SAPUI5 ABAP repository and the app index can be loaded.
 
 
 /UI5/APP_INDEX_CALCULATE  计算索引显示日志等
@@ -26,47 +30,151 @@ https://43220c0etrial.cpp.cfapps.ap21.hana.ondemand.com/11cfd2d6-9d53-498f-bab0-
 https://43220c0etrial.launchpad.cfapps.ap21.hana.ondemand.com/11cfd2d6-9d53-498f-bab0-6b714de66ff8.project3.project3-1.0.0/
 
 
-WP@zy2021
-运维平台 pwsd 77777777
-
-
- "editor.semanticTokenColorCustomizations": {
-        "[Default Dark+]": {
-            "rules": {
-                "property.mandatory:xml": {
-                    "bold": true
-                },
-                "string.i18n:xml": {
-                    "italic": true
-                }
-            }
-        },
-        "[Default Light+]": {
-            "rules": {
-                "property.mandatory:xml": {
-                    "bold": true
-                },
-                "string.i18n:xml": {
-                    "italic": true
-                }
-            }
-        },
-        "[Default High Contrast]": {
-            "rules": {
-                "property.mandatory:xml": {
-                    "bold": true
-                },
-                "string.i18n:xml": {
-                    "italic": true
-                }
-            }
-        }
-    }
-
-
 http://suzhou.bendibao.com/live/2018913/66717.shtm
 
 http://suzhou.bendibao.com/live/201418/40888.shtm
+
+
+WP@zy2021
+运维平台 pwsd 77777777
+
+ZCL_IM_ME_PROCESS_REQ_CUST Class
+*   发送数据到PM
+    DATA:lo_proxy     TYPE REF TO zco_si_sbg_s4_10698_out,
+         ls_output    TYPE zmt_sbg_s4_10698_req,
+         lt_item_data TYPE zdt_sbg_s4_10698_req_item_tab,
+         lv_transid   TYPE sysuuid-x,
+         lv_message   TYPE string.
+
+
+    DATA: lt_items  TYPE mmpur_requisition_items,
+          ls_items  TYPE mmpur_requisition_item,
+          ls_pritem TYPE mereq_item.
+
+*begin of add by pab008 20210423
+    DATA: ls_item  TYPE mereq_item,
+          ls_mould TYPE ztmm_mould,
+          lt_mould TYPE TABLE OF ztmm_mould.
+
+
+    SELECT * INTO TABLE @DATA(lt_eai_pr) FROM ztpp_eai_pr WHERE banfn EQ @im_banfn.
+
+    IF sy-subrc EQ 0.
+      MOVE-CORRESPONDING lt_eai_pr TO lt_item_data.
+      SORT lt_item_data BY bnfpo.
+
+      CALL METHOD im_header->get_items
+        RECEIVING
+          re_items = lt_items.
+
+      LOOP AT lt_items INTO ls_items.
+
+        CLEAR: ls_pritem.
+
+        CALL METHOD ls_items-item->get_data
+          RECEIVING
+            re_data = ls_pritem.
+
+        READ TABLE lt_item_data ASSIGNING FIELD-SYMBOL(<fs_item>) WITH KEY bnfpo = ls_pritem-bnfpo BINARY SEARCH.
+        CHECK sy-subrc EQ 0.
+        <fs_item>-menge = ls_pritem-menge.
+
+        IF ls_pritem-ebakz EQ 'X'.
+          <fs_item>-stat = 'D'.
+        ELSE.
+          <fs_item>-stat = 'C'.
+        ENDIF.
+      ENDLOOP.
+
+      CALL FUNCTION 'SYSTEM_UUID_CREATE'
+        IMPORTING
+          uuid = lv_transid.
+
+      ls_output-mt_sbg_s4_10698_req-request_data-header-interface_id = '10698'.
+      ls_output-mt_sbg_s4_10698_req-request_data-header-sender = 'SBGS4'.
+      ls_output-mt_sbg_s4_10698_req-request_data-header-receiver = 'PM'.
+      ls_output-mt_sbg_s4_10698_req-request_data-header-trans_id = lv_transid.
+      ls_output-mt_sbg_s4_10698_req-request_data-body-item = lt_item_data.
+
+      TRY.
+          CREATE OBJECT lo_proxy.
+
+          CALL METHOD lo_proxy->si_sbg_s4_10698_out
+            EXPORTING
+              output = ls_output.
+        CATCH cx_root INTO DATA(lo_root). "
+          lv_message = lo_root->get_text( ).
+      ENDTRY.
+
+      IF lv_message IS NOT INITIAL.
+        UPDATE ztpp_eai_pr SET resultcode = 'E'
+                               resultmessage = lv_message
+                               lauser = sy-uname
+                               ladate = sy-datum
+                               latime = sy-uzeit
+                         WHERE banfn EQ im_banfn.
+      ELSE.
+        UPDATE ztpp_eai_pr SET resultcode = 'S'
+                               resultmessage = '数据发送成功！'
+                               lauser = sy-uname
+                               ladate = sy-datum
+                               latime = sy-uzeit
+                         WHERE banfn EQ im_banfn.
+      ENDIF.
+    ENDIF.
+
+*begin of add by pab008 20210423
+    CLEAR:lt_items,ls_items.
+    CALL METHOD im_header->get_items
+      RECEIVING
+        re_items = lt_items.
+
+    LOOP AT lt_items INTO ls_items.
+
+      CLEAR: ls_item.
+      CALL METHOD ls_items-item->get_data
+        RECEIVING
+          re_data = ls_item.
+
+      IF ls_item-matkl = 'Z0002'.
+
+        SELECT SINGLE *
+          FROM ztmm_mould
+          INTO ls_mould
+          WHERE model_bm = ls_item-model_bm.
+        IF sy-subrc = 0.
+          ls_mould-lauser = sy-uname.
+          ls_mould-ladate = sy-datum.
+          ls_mould-latime = sy-uzeit.
+        ELSE.
+          ls_mould-crnam = sy-uname.
+          ls_mould-crdat = sy-datum.
+          ls_mould-crtim = sy-uzeit.
+        ENDIF.
+
+        ls_mould-model_bm = ls_item-model_bm.
+        ls_mould-model_mc = ls_item-model_mc.
+        ls_mould-model_cz = ls_item-model_cz.
+        ls_mould-model_sm = ls_item-model_sm.
+
+        APPEND ls_mould TO lt_mould.
+        CLEAR ls_mould.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF lt_mould IS NOT INITIAL.
+      MODIFY ztmm_mould FROM TABLE lt_mould.
+      IF sy-subrc = 0.
+        COMMIT WORK AND WAIT.
+      ELSE.
+        ROLLBACK WORK.
+      ENDIF.
+    ENDIF.
+
+*end of add by pab008 20210423
+
+
 
 DATA: idoc_data           TYPE TABLE OF edidd.
 DATA: t_comm_control  TYPE TABLE OF edidc,
