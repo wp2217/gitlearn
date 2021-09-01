@@ -1,8 +1,22 @@
 WS20000075 PO release
 WS65400030 PO reject
 
+
 https://max.book118.com/html/2017/0508/105274969.shtm  PO PR 审批配置
+
+CSRF Token:
 https://samz.dev/blogs/How-to-Handle-CSRF-Token-in-SAPUI5/  CSRF Token
+https://answers.sap.com/questions/12223349/odata-doesn't-return-csrf-token-why.html
+
+https://blogs.sap.com/2014/07/11/issues-with-csrf-token-and-how-to-solve-them/
+
+/IWCOR/CL_REST_HTTP_HANDLER  CSRF Token 获取Debug
+
+目前SAP单据移动端审批面临开发周期长，平台多不统一，开发复杂，维护困难等问题，制约移动应用的使用。SwiftSAP(飞思审批)解决了这些痛点，通过配置审批应用，实施开发周期短，快速实现单据移动审批，并且方便以后调整及扩展。
+
+如下示例为电脑(PC)端截图,手机或者平板上效果，请用测试帐号登录查看。
+
+
 
 用户登录
 SUSR_CHECK_LOGON_DATA
@@ -38,240 +52,59 @@ http://suzhou.bendibao.com/live/201418/40888.shtm
 WP@zy2021
 运维平台 pwsd 77777777
 
-ZCL_IM_ME_PROCESS_REQ_CUST Class
-*   发送数据到PM
-    DATA:lo_proxy     TYPE REF TO zco_si_sbg_s4_10698_out,
-         ls_output    TYPE zmt_sbg_s4_10698_req,
-         lt_item_data TYPE zdt_sbg_s4_10698_req_item_tab,
-         lv_transid   TYPE sysuuid-x,
-         lv_message   TYPE string.
+	用户登录， sap用户用sap密码，其它用户保存密码 ok
+转发人中过滤掉自己 转发点击后没反应
 
+cloud 密码 wp@zj2021
 
-    DATA: lt_items  TYPE mmpur_requisition_items,
-          ls_items  TYPE mmpur_requisition_item,
-          ls_pritem TYPE mereq_item.
+用户姓名多语言
 
-*begin of add by pab008 20210423
-    DATA: ls_item  TYPE mereq_item,
-          ls_mould TYPE ztmm_mould,
-          lt_mould TYPE TABLE OF ztmm_mould.
+https://vhcalhdbdb.topsap.net:44300/sap/bc/ui5_ui5/sap/ybc_sws_login/index.html
 
+先自己推广，不行找公司和售前联合推广三七分成
+最好先找之前能力不错的业务顾问合作，比如卢双喜，abb财务顾问等
 
-    SELECT * INTO TABLE @DATA(lt_eai_pr) FROM ztpp_eai_pr WHERE banfn EQ @im_banfn.
+bug
+下载文件文件名称不对 ok
 
-    IF sy-subrc EQ 0.
-      MOVE-CORRESPONDING lt_eai_pr TO lt_item_data.
-      SORT lt_item_data BY bnfpo.
+销售订单走通 ok
+采购订单审批走通 ok
+pr简单走通 ok
+自定义单据走通
 
-      CALL METHOD im_header->get_items
-        RECEIVING
-          re_items = lt_items.
+fiori 环境外链接转为本地
 
-      LOOP AT lt_items INTO ls_items.
+使用说明加截图word
+介绍及特点 ppt： 用下面已实现的功能展开说明
+安装实施文档下载
 
-        CLEAR: ls_pritem.
-
-        CALL METHOD ls_items-item->get_data
-          RECEIVING
-            re_data = ls_pritem.
-
-        READ TABLE lt_item_data ASSIGNING FIELD-SYMBOL(<fs_item>) WITH KEY bnfpo = ls_pritem-bnfpo BINARY SEARCH.
-        CHECK sy-subrc EQ 0.
-        <fs_item>-menge = ls_pritem-menge.
-
-        IF ls_pritem-ebakz EQ 'X'.
-          <fs_item>-stat = 'D'.
-        ELSE.
-          <fs_item>-stat = 'C'.
-        ENDIF.
-      ENDLOOP.
-
-      CALL FUNCTION 'SYSTEM_UUID_CREATE'
-        IMPORTING
-          uuid = lv_transid.
-
-      ls_output-mt_sbg_s4_10698_req-request_data-header-interface_id = '10698'.
-      ls_output-mt_sbg_s4_10698_req-request_data-header-sender = 'SBGS4'.
-      ls_output-mt_sbg_s4_10698_req-request_data-header-receiver = 'PM'.
-      ls_output-mt_sbg_s4_10698_req-request_data-header-trans_id = lv_transid.
-      ls_output-mt_sbg_s4_10698_req-request_data-body-item = lt_item_data.
-
-      TRY.
-          CREATE OBJECT lo_proxy.
-
-          CALL METHOD lo_proxy->si_sbg_s4_10698_out
-            EXPORTING
-              output = ls_output.
-        CATCH cx_root INTO DATA(lo_root). "
-          lv_message = lo_root->get_text( ).
-      ENDTRY.
-
-      IF lv_message IS NOT INITIAL.
-        UPDATE ztpp_eai_pr SET resultcode = 'E'
-                               resultmessage = lv_message
-                               lauser = sy-uname
-                               ladate = sy-datum
-                               latime = sy-uzeit
-                         WHERE banfn EQ im_banfn.
-      ELSE.
-        UPDATE ztpp_eai_pr SET resultcode = 'S'
-                               resultmessage = '数据发送成功！'
-                               lauser = sy-uname
-                               ladate = sy-datum
-                               latime = sy-uzeit
-                         WHERE banfn EQ im_banfn.
-      ENDIF.
-    ENDIF.
-
-*begin of add by pab008 20210423
-    CLEAR:lt_items,ls_items.
-    CALL METHOD im_header->get_items
-      RECEIVING
-        re_items = lt_items.
-
-    LOOP AT lt_items INTO ls_items.
-
-      CLEAR: ls_item.
-      CALL METHOD ls_items-item->get_data
-        RECEIVING
-          re_data = ls_item.
-
-      IF ls_item-matkl = 'Z0002'.
-
-        SELECT SINGLE *
-          FROM ztmm_mould
-          INTO ls_mould
-          WHERE model_bm = ls_item-model_bm.
-        IF sy-subrc = 0.
-          ls_mould-lauser = sy-uname.
-          ls_mould-ladate = sy-datum.
-          ls_mould-latime = sy-uzeit.
-        ELSE.
-          ls_mould-crnam = sy-uname.
-          ls_mould-crdat = sy-datum.
-          ls_mould-crtim = sy-uzeit.
-        ENDIF.
-
-        ls_mould-model_bm = ls_item-model_bm.
-        ls_mould-model_mc = ls_item-model_mc.
-        ls_mould-model_cz = ls_item-model_cz.
-        ls_mould-model_sm = ls_item-model_sm.
-
-        APPEND ls_mould TO lt_mould.
-        CLEAR ls_mould.
-      ENDIF.
-
-    ENDLOOP.
-
-    IF lt_mould IS NOT INITIAL.
-      MODIFY ztmm_mould FROM TABLE lt_mould.
-      IF sy-subrc = 0.
-        COMMIT WORK AND WAIT.
-      ELSE.
-        ROLLBACK WORK.
-      ENDIF.
-    ENDIF.
-
-*end of add by pab008 20210423
+已完成功能
+1.多语言支持，最多同时支持三种
+2.数据格式化，日期、时间、金额、内外部、去前导零
+3.取消函数开发
+4.批准 拒绝等 可配置
+5.按子类别过滤动态实现
+6.行项目移动端展示部分字段可配置
+7.自定义简单审批人配置表 角色+账号+组织架构
+8.附件管理
+9.仅显示实际处理者配置
+10.邮件提醒
+11.放到fiori LANCHIPAD
+12.根据条件取审批人
+13.集成sap workflow试下如下功能
+14.单据提交者上传附件fm
+15.支持mm审批策略，加上审批终止条件
+审批 拒绝 撤销 ok
+回退/驳回 ok
+转发/委托 ok
+会签 ok
 
 
 
-DATA: idoc_data           TYPE TABLE OF edidd.
-DATA: t_comm_control  TYPE TABLE OF edidc,
-      wa_comm_control TYPE edidc,
-      idoc_control    TYPE edidc.
-DATA: c_invrev_idoc_type(29) TYPE c VALUE 'SHP_OBDLV_CONFIRM_DECENTRAL03'. " IDOC TIPO BASE
-DATA: c_invrev_mestype(27)   TYPE c VALUE 'SHP_OBDLV_CONFIRM_DECENTRAL'.   " TIPO DE MENSAJE
-DATA: ls_e1shp_obdlv_confirm_decentr TYPE e1shp_obdlv_confirm_decentr,
-      ls_e1bpobdlvhdrcon             TYPE e1bpobdlvhdrcon,
-      ls_e1bpobdlvhdrctrlcon         TYPE e1bpobdlvhdrctrlcon.
-DATA: ls_idoc_data TYPE edidd.
-DATA: lv_numidoc TYPE edi_docnum.
-DATA dummy TYPE string.
-DATA ls_idoctrl  TYPE ZTB_ACUER_INTER.
-DATA idoc_data2  TYPE TABLE OF  edi_dd40.
-DATA: ls_idoc_data2 TYPE edi_dd40.
-DATA: lv_idocnum TYPE edidc-docnum.
-data it_idoc_control TYPE TABLE OF edidc.
 
 
-TRY.
-    IF ( activity_code = '20' AND ref_value = '99' ) .
-      " Asignando valores a campos de los segmentos
-      ls_e1shp_obdlv_confirm_decentr-delivery  = order_nbr.
-      ls_e1bpobdlvhdrcon-deliv_numb            = order_nbr.
-      ls_e1bpobdlvhdrctrlcon-deliv_numb        = order_nbr.
-      ls_e1bpobdlvhdrctrlcon-dlv_del           = 'X'.
 
 
-      " Agregando lineas a tabla con segmentos
-      ls_idoc_data-segnam = 'E1SHP_OBDLV_CONFIRM_DECENTR'.
-      ls_idoc_data-sdata  = ls_e1shp_obdlv_confirm_decentr.
-      APPEND ls_idoc_data TO idoc_data.
 
 
-      ls_idoc_data-segnam = 'E1BPOBDLVHDRCON'.
-      ls_idoc_data-sdata  = ls_e1bpobdlvhdrcon.
-      APPEND ls_idoc_data TO idoc_data.
 
-
-      ls_idoc_data-segnam = 'E1BPOBDLVHDRCTRLCON'.
-      ls_idoc_data-sdata  = ls_e1bpobdlvhdrctrlcon.
-      APPEND ls_idoc_data TO idoc_data.
-
-
-      SELECT SINGLE * from ZTB_ACUER_INTER into ls_idoctrl.
-
-
-      idoc_control-mestyp  = c_invrev_mestype.
-      idoc_control-IDOCTP  = c_invrev_idoc_type.
-      idoc_control-DIRECT  = '2'.               " Sentido del IDoc: Entrada
-      idoc_control-rcvprt  = ls_idoctrl-rcvprt.
-      idoc_control-rcvprn  = ls_idoctrl-rcvprn.
-      idoc_control-sndprt  = ls_idoctrl-sndprt.
-      idoc_control-sndprn  = ls_idoctrl-sndprn.
-      idoc_control-SNDPOR  = ls_idoctrl-SNDPOR. " Puerta remitente
-      idoc_control-RCVPOR  = ls_idoctrl-RCVPOR. " Puerta destinatario
-DATA:
-ld_pe_idoc_number	TYPE EDIDC-DOCNUM,
-ld_pe_state_of_processing	TYPE SY-SUBRC,
-ld_pe_inbound_process_data  TYPE TEDE2.
-
-
-      CALL FUNCTION 'IDOC_INBOUND_WRITE_TO_DB'
-       IMPORTING
-         PE_IDOC_NUMBER                = ld_pe_idoc_number
-         PE_STATE_OF_PROCESSING        = ld_pe_state_of_processing
-         PE_INBOUND_PROCESS_DATA       = ld_pe_inbound_process_data
-        TABLES
-          t_data_records                = idoc_data
-*         T_LINKED_OBJECTS              =
-        changing
-          pc_control_record             = idoc_CONTROL
-*       EXCEPTIONS
-*         IDOC_NOT_SAVED                = 1
-*         OTHERS                        = 2
-.
-      IF sy-subrc <> 0.
-        ls_log-msgid = sy-msgid.
-        ls_log-msgno = sy-msgno.
-        ls_log-msgty = sy-msgty.
-        ls_log-msgv1 = order_nbr.
-        ls_log-msgv2 = activity_code.
-        ls_log-msgv3 = ref_value.
-
-
-        APPEND ls_log TO lt_log.
-      ELSE.
-          
-        COMMIT WORK.
-        SUBMIT rseout00.
-      ENDIF.
-    ENDIF.
-CATCH CX_ROOT.
-    ls_log-msgty = 'E'.
-    CONCATENATE 'ORDER: ' order_nbr                       INTO ls_log-msgv1.
-    CONCATENATE 'ACTIVITY_CODE' activity_code             INTO ls_log-msgv2.
-    ls_log-msgv3 = ' Error en ejecucion GAP 154'.
-    APPEND ls_log TO lt_log.
-ENDTRY.
